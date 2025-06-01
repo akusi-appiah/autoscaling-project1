@@ -35,7 +35,6 @@ Parameters:
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Key pair name (for SSH access)
-    Default: cf-autoscaleKeyPair.pem
 
 ######################################################
 # VPC and Networking
