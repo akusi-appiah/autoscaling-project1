@@ -28,12 +28,14 @@ Parameters:
     Description: EC2 instance type
 
   AmiId:
-    Type: AWS::EC2::Image::Id
-    Description: AMI ID for EC2 instance (Amazon Linux 2 preferred)
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Description: Latest Amazon Linux 2 AMI from SSM Parameter Store
 
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Key pair name (for SSH access)
+    Default: cf-autoscaleKeyPair.pem
 
 ######################################################
 # VPC and Networking
