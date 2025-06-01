@@ -1,4 +1,4 @@
-WSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Auto Scaling Apache Web Server setup with ALB, private/public subnets,
   NAT Gateway, and scaling based on CPU utilization.
