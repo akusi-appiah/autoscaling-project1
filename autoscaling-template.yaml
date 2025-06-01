@@ -151,111 +151,111 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
 
-######################################################
-# Launch Template
-######################################################
-  WebLaunchTemplate:
-    Type: AWS::EC2::LaunchTemplate
-    Properties:
-      LaunchTemplateData:
-        ImageId: !Ref AmiId
-        InstanceType: !Ref InstanceType
-        KeyName: !Ref KeyName
-        SecurityGroupIds:
-          - !Ref InstanceSecurityGroup
-        UserData:
-          Fn::Base64: !Sub |
-            #!/bin/bash
-            yum update -y
-            yum install -y httpd stress
-            systemctl start httpd
-            systemctl enable httpd
-            INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
-            IP_ADDR=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
-            echo "<html><body><h1>Hello from ${IP_ADDR} / ${INSTANCE_ID}</h1><button onclick=\"fetch('/stress')\">Stress CPU</button><script>fetch('/stress')</script></body></html>" > /var/www/html/index.html
-            echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/html/stress
-            chmod +x /var/www/html/stress
-            echo "AddHandler cgi-script .sh" >> /etc/httpd/conf/httpd.conf
-            systemctl restart httpd
+# ######################################################
+# # Launch Template
+# ######################################################
+#   WebLaunchTemplate:
+#     Type: AWS::EC2::LaunchTemplate
+#     Properties:
+#       LaunchTemplateData:
+#         ImageId: !Ref AmiId
+#         InstanceType: !Ref InstanceType
+#         KeyName: !Ref KeyName
+#         SecurityGroupIds:
+#           - !Ref InstanceSecurityGroup
+#         UserData:
+#           Fn::Base64: !Sub |
+#             #!/bin/bash
+#             yum update -y
+#             yum install -y httpd stress
+#             systemctl start httpd
+#             systemctl enable httpd
+#             INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+#             IP_ADDR=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+#             echo "<html><body><h1>Hello from ${IP_ADDR} / ${INSTANCE_ID}</h1><button onclick=\"fetch('/stress')\">Stress CPU</button><script>fetch('/stress')</script></body></html>" > /var/www/html/index.html
+#             echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/html/stress
+#             chmod +x /var/www/html/stress
+#             echo "AddHandler cgi-script .sh" >> /etc/httpd/conf/httpd.conf
+#             systemctl restart httpd
 
-######################################################
-# Load Balancer & Target Group
-######################################################
-  WebTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      VpcId: !Ref VPC
-      Port: 80
-      Protocol: HTTP
-      TargetType: instance
-      HealthCheckPath: /
-      Matcher:
-        HttpCode: 200
+# ######################################################
+# # Load Balancer & Target Group
+# ######################################################
+#   WebTargetGroup:
+#     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+#     Properties:
+#       VpcId: !Ref VPC
+#       Port: 80
+#       Protocol: HTTP
+#       TargetType: instance
+#       HealthCheckPath: /
+#       Matcher:
+#         HttpCode: 200
 
-  WebALB:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Properties:
-      Name: web-alb
-      Subnets:
-        - !Ref PublicSubnet
-      SecurityGroups:
-        - !Ref ALBSecurityGroup
-      Scheme: internet-facing
-      LoadBalancerAttributes:
-        - Key: idle_timeout.timeout_seconds
-          Value: '60'
+#   WebALB:
+#     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+#     Properties:
+#       Name: web-alb
+#       Subnets:
+#         - !Ref PublicSubnet
+#       SecurityGroups:
+#         - !Ref ALBSecurityGroup
+#       Scheme: internet-facing
+#       LoadBalancerAttributes:
+#         - Key: idle_timeout.timeout_seconds
+#           Value: '60'
 
-  WebListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      LoadBalancerArn: !Ref WebALB
-      Port: 80
-      Protocol: HTTP
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref WebTargetGroup
+#   WebListener:
+#     Type: AWS::ElasticLoadBalancingV2::Listener
+#     Properties:
+#       LoadBalancerArn: !Ref WebALB
+#       Port: 80
+#       Protocol: HTTP
+#       DefaultActions:
+#         - Type: forward
+#           TargetGroupArn: !Ref WebTargetGroup
 
-######################################################
-# Auto Scaling Group & Policies
-######################################################
-  WebAutoScalingGroup:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      VPCZoneIdentifier:
-        - !Ref PrivateSubnet
-      LaunchTemplate:
-        LaunchTemplateId: !Ref WebLaunchTemplate
-        Version: !GetAtt WebLaunchTemplate.LatestVersionNumber
-      MinSize: '1'
-      MaxSize: '3'
-      DesiredCapacity: '1'
-      TargetGroupARNs:
-        - !Ref WebTargetGroup
-      HealthCheckType: EC2
-      HealthCheckGracePeriod: 300
+# ######################################################
+# # Auto Scaling Group & Policies
+# ######################################################
+#   WebAutoScalingGroup:
+#     Type: AWS::AutoScaling::AutoScalingGroup
+#     Properties:
+#       VPCZoneIdentifier:
+#         - !Ref PrivateSubnet
+#       LaunchTemplate:
+#         LaunchTemplateId: !Ref WebLaunchTemplate
+#         Version: !GetAtt WebLaunchTemplate.LatestVersionNumber
+#       MinSize: '1'
+#       MaxSize: '3'
+#       DesiredCapacity: '1'
+#       TargetGroupARNs:
+#         - !Ref WebTargetGroup
+#       HealthCheckType: EC2
+#       HealthCheckGracePeriod: 300
 
-  CPUAlarmHigh:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: Scale out if CPU > 50%
-      Namespace: AWS/EC2
-      MetricName: CPUUtilization
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebAutoScalingGroup
-      Statistic: Average
-      Period: 60
-      EvaluationPeriods: 2
-      Threshold: 50
-      ComparisonOperator: GreaterThanThreshold
-      AlarmActions:
-        - !Ref ScaleOutPolicy
+#   CPUAlarmHigh:
+#     Type: AWS::CloudWatch::Alarm
+#     Properties:
+#       AlarmDescription: Scale out if CPU > 50%
+#       Namespace: AWS/EC2
+#       MetricName: CPUUtilization
+#       Dimensions:
+#         - Name: AutoScalingGroupName
+#           Value: !Ref WebAutoScalingGroup
+#       Statistic: Average
+#       Period: 60
+#       EvaluationPeriods: 2
+#       Threshold: 50
+#       ComparisonOperator: GreaterThanThreshold
+#       AlarmActions:
+#         - !Ref ScaleOutPolicy
 
-  ScaleOutPolicy:
-    Type: AWS::AutoScaling::ScalingPolicy
-    Properties:
-      AutoScalingGroupName: !Ref WebAutoScalingGroup
-      PolicyType: SimpleScaling
-      AdjustmentType: ChangeInCapacity
-      ScalingAdjustment: 1
-      Cooldown: 300
+#   ScaleOutPolicy:
+#     Type: AWS::AutoScaling::ScalingPolicy
+#     Properties:
+#       AutoScalingGroupName: !Ref WebAutoScalingGroup
+#       PolicyType: SimpleScaling
+#       AdjustmentType: ChangeInCapacity
+#       ScalingAdjustment: 1
+#       Cooldown: 300
