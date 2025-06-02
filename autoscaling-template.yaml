@@ -238,7 +238,7 @@ Resources:
         SecurityGroupIds:
           - !Ref InstanceSecurityGroup
 
-        UserData:
+        # UserData:
           # Fn::Base64: |
           #   #!/bin/bash
           #   yum update -y
@@ -255,53 +255,57 @@ Resources:
           #   echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
           #   systemctl restart httpd
 
-          Fn::Base64: !Sub |
-            !/bin/bash
-            yum update -y
-            yum install -y httpd stress
-            systemctl start httpd
-            systemctl enable httpd
-            INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-            IP_ADDR=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-            echo "<html><body><h1>Hello from ${!IP_ADDR} / ${!INSTANCE_ID}</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
-            mkdir -p /var/www/cgi-bin
-            echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
-            chmod +x /var/www/cgi-bin/stress.sh
-            echo "ScriptAlias /cgi-bin/ \"/var/www/cgi-bin/\"" >> /etc/httpd/conf/httpd.conf
-            echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
-            systemctl restart httpd               
+          # Fn::Base64: !Sub |
+            # !/bin/bash
+            # yum update -y
+            # yum install -y httpd stress
+            # systemctl start httpd
+            # systemctl enable httpd
+            # INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+            # IP_ADDR=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+            # echo "<html><body><h1>Hello from ${!IP_ADDR} / ${!INSTANCE_ID}</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
+            # mkdir -p /var/www/cgi-bin
+            # echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
+            # chmod +x /var/www/cgi-bin/stress.sh
+            # echo "ScriptAlias /cgi-bin/ \"/var/www/cgi-bin/\"" >> /etc/httpd/conf/httpd.conf
+            # echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
+            # systemctl restart httpd               
 
 
-        # UserData:
-        #   Fn::Base64: |
-        #     #!/bin/bash
-        #     yum update -y
-        #     yum install -y httpd stress
-        #     systemctl start httpd
-        #     systemctl enable httpd
+        UserData:
+          Fn::Base64:
+            !Sub |
+              #!/bin/bash
+              yum update -y
+              yum install -y httpd stress
+              systemctl start httpd
+              systemctl enable httpd
 
-        #     # Obtain a session token for IMDSv2
-        #     TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
-        #       -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+              # Obtain IMDSv2 token
+              TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+                -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
 
-        #     # Retrieve instance metadata using the token
-        #     INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
-        #       http://169.254.169.254/latest/meta-data/instance-id)
-        #     IP_ADDR=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
-        #       http://169.254.169.254/latest/meta-data/local-ipv4)
+              # Retrieve instance metadata using the token
+              INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+                http://169.254.169.254/latest/meta-data/instance-id)
+              IP_ADDR=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+                http://169.254.169.254/latest/meta-data/local-ipv4)
 
-        #     # Create the index.html file with instance metadata
-        #     echo "<html><body><h1>Hello from $IP_ADDR / $INSTANCE_ID</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
+              # Create a simple HTML page displaying the instance ID and IP address
+              echo "<html><body><h1>Hello from ${IP_ADDR} / ${INSTANCE_ID}</h1>
+              <button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
 
-        #     # Set up the stress script
-        #     mkdir -p /var/www/cgi-bin
-        #     echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
-        #     chmod +x /var/www/cgi-bin/stress.sh
+              # Set up a CGI script to stress the CPU
+              mkdir -p /var/www/cgi-bin
+              echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
+              chmod +x /var/www/cgi-bin/stress.sh
 
-        #     # Configure Apache to allow CGI scripts
-        #     echo "ScriptAlias /cgi-bin/ \"/var/www/cgi-bin/\"" >> /etc/httpd/conf/httpd.conf
-        #     echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
-        #     systemctl restart httpd
+              # Configure Apache to execute CGI scripts
+              echo "ScriptAlias /cgi-bin/ \"/var/www/cgi-bin/\"" >> /etc/httpd/conf/httpd.conf
+              echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
+
+              # Restart Apache to apply changes
+              systemctl restart httpd
 
 
 
@@ -346,6 +350,52 @@ Resources:
   ######################################################
   # Auto Scaling Group & Policies
   ######################################################
+  # WebAutoScalingGroup:
+  #   Type: AWS::AutoScaling::AutoScalingGroup
+  #   Properties:
+  #     VPCZoneIdentifier:
+  #       - !Ref PrivateSubnet1
+  #       - !Ref PrivateSubnet2
+  #     LaunchTemplate:
+  #       LaunchTemplateId: !Ref WebLaunchTemplate
+  #       Version: !GetAtt WebLaunchTemplate.LatestVersionNumber
+  #     MinSize: "1"
+  #     MaxSize: "3"
+  #     DesiredCapacity: "1"
+  #     TargetGroupARNs:
+  #       - !Ref WebTargetGroup
+  #     HealthCheckType: EC2
+  #     HealthCheckGracePeriod: 60
+
+  # ScaleOutPolicy:
+  #   Type: AWS::AutoScaling::ScalingPolicy
+  #   Properties:
+  #     AutoScalingGroupName: !Ref WebAutoScalingGroup
+  #     PolicyType: SimpleScaling
+  #     AdjustmentType: ChangeInCapacity
+  #     ScalingAdjustment: 1
+  #     Cooldown: 300
+
+  # CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Scale out if CPU > 50%
+      Namespace: AWS/EC2
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebAutoScalingGroup
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 2
+      Threshold: 50
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref ScaleOutPolicy
+
+
+
+  ######################################################
   WebAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -372,6 +422,15 @@ Resources:
       ScalingAdjustment: 1
       Cooldown: 300
 
+  ScaleInPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref WebAutoScalingGroup
+      PolicyType: SimpleScaling
+      AdjustmentType: ChangeInCapacity
+      ScalingAdjustment: -1
+      Cooldown: 300
+
   CPUAlarmHigh:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -388,3 +447,21 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       AlarmActions:
         - !Ref ScaleOutPolicy
+
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Scale in if CPU < 30%
+      Namespace: AWS/EC2
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebAutoScalingGroup
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 5  # Conservative scale-in to avoid flapping
+      Threshold: 30
+      ComparisonOperator: LessThanThreshold
+      AlarmActions:
+        - !Ref ScaleInPolicy
+  
