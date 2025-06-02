@@ -145,7 +145,7 @@ Resources:
   NATGateway1:
     Type: AWS::EC2::NatGateway
     Properties:
-      AllocationId: !GetAtt NATGatewayEIP.AllocationId
+      AllocationId: !GetAtt NATGatewayEIP1.AllocationId
       SubnetId: !Ref PublicSubnet1
 
   NATGatewayEIP2:
@@ -157,7 +157,7 @@ Resources:
   NATGateway2:
     Type: AWS::EC2::NatGateway
     Properties:
-      AllocationId: !GetAtt NATGatewayEIP.AllocationId
+      AllocationId: !GetAtt NATGatewayEIP2.AllocationId
       SubnetId: !Ref PublicSubnet2
 
   PrivateRouteTable1:
