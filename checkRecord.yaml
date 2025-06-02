@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Auto Scaling Apache Web Server setup with ALB, private/public subnets,
   NAT Gateway, and scaling based on CPU utilization.
@@ -74,7 +74,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnetCidr1
-      AvailabilityZone: !Select [0, !GetAZs ""]
+      AvailabilityZone: !Select [0, !GetAZs '']
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -85,7 +85,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnetCidr2
-      AvailabilityZone: !Select [1, !GetAZs ""]
+      AvailabilityZone: !Select [1, !GetAZs '']
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -96,7 +96,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.3.0/24
-      AvailabilityZone: !Select [0, !GetAZs ""]
+      AvailabilityZone: !Select [0, !GetAZs '']
       Tags:
         - Key: Name
           Value: PrivateSubnet1
@@ -106,10 +106,11 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.4.0/24
-      AvailabilityZone: !Select [1, !GetAZs ""]
+      AvailabilityZone: !Select [1, !GetAZs '']
       Tags:
         - Key: Name
           Value: PrivateSubnet2
+
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -136,6 +137,7 @@ Resources:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicRouteTable
 
+
   NATGatewayEIP1:
     Type: AWS::EC2::EIP
     DependsOn: AttachGateway
@@ -159,6 +161,7 @@ Resources:
     Properties:
       AllocationId: !GetAtt NATGatewayEIP.AllocationId
       SubnetId: !Ref PublicSubnet2
+
 
   PrivateRouteTable1:
     Type: AWS::EC2::RouteTable
@@ -196,9 +199,10 @@ Resources:
       SubnetId: !Ref PrivateSubnet2
       RouteTableId: !Ref PrivateRouteTable2
 
-  ######################################################
-  # Security Groups
-  ######################################################
+
+######################################################
+# Security Groups
+######################################################
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -225,9 +229,9 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
 
-  ######################################################
-  # Launch Template
-  ######################################################
+######################################################
+# Launch Template
+######################################################
   WebLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
@@ -254,9 +258,9 @@ Resources:
             echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
             systemctl restart httpd
 
-  ######################################################
-  # Load Balancer & Target Group
-  ######################################################
+######################################################
+# Load Balancer & Target Group
+######################################################
   WebTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -280,7 +284,8 @@ Resources:
       Scheme: internet-facing
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
-          Value: "60"
+          Value: '60'
+
 
   WebListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -292,9 +297,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref WebTargetGroup
 
-  ######################################################
-  # Auto Scaling Group & Policies
-  ######################################################
+######################################################
+# Auto Scaling Group & Policies
+######################################################
   WebAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -304,9 +309,9 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref WebLaunchTemplate
         Version: !GetAtt WebLaunchTemplate.LatestVersionNumber
-      MinSize: "1"
-      MaxSize: "3"
-      DesiredCapacity: "1"
+      MinSize: '1'
+      MaxSize: '3'
+      DesiredCapacity: '1'
       TargetGroupARNs:
         - !Ref WebTargetGroup
       HealthCheckType: EC2
