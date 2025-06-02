@@ -1,10 +1,10 @@
 template-file-path: autoscaling-template.yaml
 parameters:
   KeyName: cf-autoscaleKeyPair
-  PublicSubnetCidr1: 10.0.1.0/24
-  PublicSubnetCidr2: 10.0.2.0/24
-  PrivateSubnetCidr1: 10.0.3.0/24
-  PrivateSubnetCidr2: 10.0.4.0/24
+  PublicSubnetCidr1: 12.0.1.0/24
+  PublicSubnetCidr2: 12.0.3.0/24
+  PrivateSubnetCidr1: 12.0.2.0/24
+  PrivateSubnetCidr2: 12.0.5.0/24
   VpcCidr: 10.0.0.0/16
   InstanceType: t3.micro
   AmiId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2

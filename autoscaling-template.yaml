@@ -9,27 +9,27 @@ Description: >
 Parameters:
   VpcCidr:
     Type: String
-    Default: 10.0.0.0/16
+    Default: 12.0.0.0/16
     Description: CIDR block for the VPC
 
   PublicSubnetCidr1:
     Type: String
-    Default: 10.0.1.0/24
+    Default: 12.0.1.0/24
     Description: CIDR block for the public subnet (ALB, NAT Gateway)
 
   PublicSubnetCidr2:
     Type: String
-    Default: 10.0.2.0/24
+    Default: 12.0.3.0/24
     Description: CIDR block for the public subnet (ALB, NAT Gateway)
 
   PrivateSubnetCidr1:
     Type: String
-    Default: 10.0.3.0/24
+    Default: 12.0.2.0/24
     Description: CIDR block for the private subnet (EC2 instances)
 
   PrivateSubnetCidr2:
     Type: String
-    Default: 10.0.4.0/24
+    Default: 12.0.5.0/24
     Description: CIDR block for the private subnet (EC2 instances)
 
   InstanceType:
