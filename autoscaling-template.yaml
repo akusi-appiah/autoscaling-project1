@@ -246,8 +246,7 @@ Resources:
             systemctl start httpd
             systemctl enable httpd
             INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-            IP_ADDR=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-            echo "<html><body><h1>Hello from $${IP_ADDR} / $${INSTANCE_ID}</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
+            echo "<html><body><h1>Hello from ${hostname -f} / ${INSTANCE_ID}</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
             mkdir -p /var/www/cgi-bin
             echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
             chmod +x /var/www/cgi-bin/stress.sh
