@@ -238,75 +238,23 @@ Resources:
         SecurityGroupIds:
           - !Ref InstanceSecurityGroup
 
-        # UserData:
-        #   Fn::Base64: |
-        #     #!/bin/bash
-        #     yum update -y
-        #     yum install -y httpd stress
-        #     systemctl start httpd
-        #     systemctl enable httpd
-        #     INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-        #     IP_ADDR=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-        #     echo "<html><body><h1>Hello from $${IP_ADDR} / $${INSTANCE_ID}</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
-        #     mkdir -p /var/www/cgi-bin
-        #     echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
-        #     chmod +x /var/www/cgi-bin/stress.sh
-        #     echo "ScriptAlias /cgi-bin/ \"/var/www/cgi-bin/\"" >> /etc/httpd/conf/httpd.conf
-        #     echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
-        #     systemctl restart httpd
-
-          # Fn::Base64: !Sub |
-            # !/bin/bash
-            # yum update -y
-            # yum install -y httpd stress
-            # systemctl start httpd
-            # systemctl enable httpd
-            # INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-            # IP_ADDR=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-            # echo "<html><body><h1>Hello from ${!IP_ADDR} / ${!INSTANCE_ID}</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
-            # mkdir -p /var/www/cgi-bin
-            # echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
-            # chmod +x /var/www/cgi-bin/stress.sh
-            # echo "ScriptAlias /cgi-bin/ \"/var/www/cgi-bin/\"" >> /etc/httpd/conf/httpd.conf
-            # echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
-            # systemctl restart httpd               
-
-
         UserData:
-          Fn::Base64: !Sub |
+          Fn::Base64: |
             #!/bin/bash
             yum update -y
             yum install -y httpd stress
             systemctl start httpd
             systemctl enable httpd
-
-            # Obtain IMDSv2 token
-            TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
-              -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-
-            # Retrieve instance metadata using the token
-            INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
-              http://169.254.169.254/latest/meta-data/instance-id)
-            IP_ADDR=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
-              http://169.254.169.254/latest/meta-data/local-ipv4)
-
-            # Create a simple HTML page displaying the instance ID and IP address
-            echo "<html><body><h1>Hello from ${IP_ADDR} / ${INSTANCE_ID}</h1>
-            <button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
-
-            # Set up a CGI script to stress the CPU
+            INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+            IP_ADDR=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+            echo "<html><body><h1>Hello from $${IP_ADDR} / $${INSTANCE_ID}</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
             mkdir -p /var/www/cgi-bin
             echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
             chmod +x /var/www/cgi-bin/stress.sh
-
-            # Configure Apache to execute CGI scripts
             echo "ScriptAlias /cgi-bin/ \"/var/www/cgi-bin/\"" >> /etc/httpd/conf/httpd.conf
             echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
-
-            # Restart Apache to apply changes
             systemctl restart httpd
-
-
+             
 
   ######################################################
   # Load Balancer & Target Group
