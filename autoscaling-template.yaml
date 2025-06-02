@@ -377,21 +377,21 @@ Resources:
   #     Cooldown: 300
 
   # CPUAlarmHigh:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: Scale out if CPU > 50%
-      Namespace: AWS/EC2
-      MetricName: CPUUtilization
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebAutoScalingGroup
-      Statistic: Average
-      Period: 60
-      EvaluationPeriods: 2
-      Threshold: 50
-      ComparisonOperator: GreaterThanThreshold
-      AlarmActions:
-        - !Ref ScaleOutPolicy
+    # Type: AWS::CloudWatch::Alarm
+    # Properties:
+    #   AlarmDescription: Scale out if CPU > 50%
+    #   Namespace: AWS/EC2
+    #   MetricName: CPUUtilization
+    #   Dimensions:
+    #     - Name: AutoScalingGroupName
+    #       Value: !Ref WebAutoScalingGroup
+    #   Statistic: Average
+    #   Period: 60
+    #   EvaluationPeriods: 2
+    #   Threshold: 50
+    #   ComparisonOperator: GreaterThanThreshold
+    #   AlarmActions:
+    #     - !Ref ScaleOutPolicy
 
 
 
