@@ -254,8 +254,7 @@ Resources:
           #   echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
           #   systemctl restart httpd
 
-          UserData:
-            Fn::Base64: |
+          UserData: !Base64 |
               #!/bin/bash
               yum update -y
               yum install -y httpd stress
