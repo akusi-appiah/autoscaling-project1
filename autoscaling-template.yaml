@@ -238,7 +238,7 @@ Resources:
         SecurityGroupIds:
           - !Ref InstanceSecurityGroup
 
-        # UserData:
+        UserData:
           # Fn::Base64: |
           #   #!/bin/bash
           #   yum update -y
@@ -255,37 +255,53 @@ Resources:
           #   echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
           #   systemctl restart httpd
 
-
-        UserData:
-          Fn::Base64: |
-            #!/bin/bash
+          Fn::Base64: !Sub |
+            !/bin/bash
             yum update -y
             yum install -y httpd stress
             systemctl start httpd
             systemctl enable httpd
-
-            # Obtain a session token for IMDSv2
-            TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
-              -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-
-            # Retrieve instance metadata using the token
-            INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
-              http://169.254.169.254/latest/meta-data/instance-id)
-            IP_ADDR=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
-              http://169.254.169.254/latest/meta-data/local-ipv4)
-
-            # Create the index.html file with instance metadata
-            echo "<html><body><h1>Hello from $IP_ADDR / $INSTANCE_ID</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
-
-            # Set up the stress script
+            INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+            IP_ADDR=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+            echo "<html><body><h1>Hello from ${!IP_ADDR} / ${!INSTANCE_ID}</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
             mkdir -p /var/www/cgi-bin
             echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
             chmod +x /var/www/cgi-bin/stress.sh
-
-            # Configure Apache to allow CGI scripts
             echo "ScriptAlias /cgi-bin/ \"/var/www/cgi-bin/\"" >> /etc/httpd/conf/httpd.conf
             echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
-            systemctl restart httpd
+            systemctl restart httpd               
+
+
+        # UserData:
+        #   Fn::Base64: |
+        #     #!/bin/bash
+        #     yum update -y
+        #     yum install -y httpd stress
+        #     systemctl start httpd
+        #     systemctl enable httpd
+
+        #     # Obtain a session token for IMDSv2
+        #     TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+        #       -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+        #     # Retrieve instance metadata using the token
+        #     INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+        #       http://169.254.169.254/latest/meta-data/instance-id)
+        #     IP_ADDR=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+        #       http://169.254.169.254/latest/meta-data/local-ipv4)
+
+        #     # Create the index.html file with instance metadata
+        #     echo "<html><body><h1>Hello from $IP_ADDR / $INSTANCE_ID</h1><button onclick=\"fetch('/cgi-bin/stress.sh')\">Stress CPU</button></body></html>" > /var/www/html/index.html
+
+        #     # Set up the stress script
+        #     mkdir -p /var/www/cgi-bin
+        #     echo -e "#!/bin/bash\nstress --cpu 1 --timeout 60" > /var/www/cgi-bin/stress.sh
+        #     chmod +x /var/www/cgi-bin/stress.sh
+
+        #     # Configure Apache to allow CGI scripts
+        #     echo "ScriptAlias /cgi-bin/ \"/var/www/cgi-bin/\"" >> /etc/httpd/conf/httpd.conf
+        #     echo -e "<Directory \"/var/www/cgi-bin\">\nAllowOverride None\nOptions +ExecCGI\nRequire all granted\nAddHandler cgi-script .sh\n</Directory>" >> /etc/httpd/conf/httpd.conf
+        #     systemctl restart httpd
 
 
 
