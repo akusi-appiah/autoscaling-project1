@@ -1,8 +1,1 @@
-template-file-path: wk3-autoscaling-template.yaml
-parameters:
-  PublicSubnet1: 10.0.0.0/20
-  PublicSubnet2: 10.0.16.0/20  
-  PrivateSubnet1: 10.0.128.0/20
-  PrivateSubnet2: 10.0.144.0/20
-  VpcId: 10.0.0.0/16  
-tags: {}
+
